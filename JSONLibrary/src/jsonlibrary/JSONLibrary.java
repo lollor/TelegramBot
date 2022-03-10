@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package telegramapi;
+package jsonlibrary;
 
 import com.google.gson.*;
 import java.io.BufferedReader;

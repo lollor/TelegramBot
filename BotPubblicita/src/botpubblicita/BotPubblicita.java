@@ -5,7 +5,7 @@
  */
 package botpubblicita;
 
-import telegramapi.*;
+import jsonlibrary.JSONLibrary;
 import com.google.gson.*;
 import java.awt.Image;
 import java.awt.image.AbstractMultiResolutionImage;
@@ -23,6 +23,8 @@ import java.io.Writer;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Locale;
 import javax.imageio.ImageIO;
 
@@ -37,39 +39,44 @@ public class BotPubblicita {
      */
     public static void main(String[] args) throws MalformedURLException, IOException {
         // TODO code application logic here
-        UpdatesResponse updates = JSONLibrary.FromJSON("https://api.telegram.org/bot5176466546:AAFohyNASLS-j3NP7rVtrzyNC0U66LK-Bl4/getUpdates", UpdatesResponse.class);
-//        Me me = JSONLibrary.FromJSON("https://api.telegram.org/bot5176466546:AAFohyNASLS-j3NP7rVtrzyNC0U66LK-Bl4/getMe", Me.class);
-//        String file_path = JSONLibrary.FromJSON("https://api.telegram.org/bot5176466546:AAFohyNASLS-j3NP7rVtrzyNC0U66LK-Bl4/getFile?file_id="+updates.result[updates.GetLength()-2].message.document.thumb.file_id, File.class).result.file_path;
-//        URL ulr = new  URL("https://api.telegram.org/file/bot5176466546:AAFohyNASLS-j3NP7rVtrzyNC0U66LK-Bl4/"+file_path);
-//        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(ulr.openStream()));
-//        PrintWriter printWriter = new PrintWriter(file_path.split("/")[1]);
-//        String line;
-//        char[] cbuf = new char[1000];
-//        while ((line = bufferedReader.readLine()) != null) {
-//            //System.out.println(line);
-//            printWriter.write(line);
-//        }
-//        while (bufferedReader.read(cbuf) != -1) {
-//            System.out.println(line);
-//            printWriter.write(cbuf);
-//        }
-//        bufferedReader.close();
-//        printWriter.close();
-//        BufferedImage bufferedImage= ImageIO.read(ulr);
-//        ImageIO.write(bufferedImage, "jpg", new java.io.File(file_path.split("/")[1]));
-//        
+        UpdatesResponse updates = GetUpdatesResponse();
+        MeResponse me = GetMeResponse();
 
-        //Object documento = JSONLibrary.FromJSON("https://api.telegram.org/file/bot5176466546:AAFohyNASLS-j3NP7rVtrzyNC0U66LK-Bl4/"+file_path, Object.class);
-        //System.out.println("Ci sono "+updates.result.length + " risultati.");
+        System.out.println("Ci sono " + updates.result.length + " risultati.");
         for (var arg : updates.result) {
-            try {
-                System.out.println(arg.message.text);
-            } catch (NullPointerException e) {
-                System.out.println(e.getMessage());
+            Attachment attachment = arg.message.GetAttachment();
+            if (attachment == null || attachment.type == null) {
+                try {
+                    System.out.println("'" + arg.message.text + "' da " + arg.message.from.username);
+                } catch (NullPointerException e) {
+                    System.out.println(e.getMessage());
+                }
+            } else if (attachment.type == Photo.class) {
+                Photo photo = (Photo) attachment;
+                System.out.println("C'è una foto in allegato. File_id = " + photo.file_id);
+            } else if (attachment.type == Document.class) {
+                Document document = (Document) attachment;
+                System.out.println("C'è un documento in allegato. File_id = " + document.file_id);
             }
         }
-        SentMessageResponse sentMessage = JSONLibrary.FromJSON("https://api.telegram.org/bot5176466546:AAFohyNASLS-j3NP7rVtrzyNC0U66LK-Bl4/sendMessage?text=" + Calendar.getInstance().getTime() + "&chat_id=" + updates.GetLastResult().message.chat.id, SentMessageResponse.class);
-        System.out.println("Ho scritto a " + sentMessage.result.chat.username + " questo messaggio: " + sentMessage.result.text);
+        Update lastUpdate = updates.GetLastResult();
+        if (lastUpdate == null) {
+            System.out.println("Non esiste un messaggio. Non invio niente.");
+            return;
+        }
+        //SentMessageResponse sentMessage = SendMessage(Calendar.getInstance().getTime().toString(), lastUpdate.message.chat.id);
+        //System.out.println("Ho scritto a " + sentMessage.result.chat.username + " questo messaggio: " + sentMessage.result.text);
     }
 
+    public static UpdatesResponse GetUpdatesResponse() {
+        return JSONLibrary.FromJSON("https://api.telegram.org/bot5176466546:AAFohyNASLS-j3NP7rVtrzyNC0U66LK-Bl4/getUpdates", UpdatesResponse.class);
+    }
+
+    public static MeResponse GetMeResponse() {
+        return JSONLibrary.FromJSON("https://api.telegram.org/bot5176466546:AAFohyNASLS-j3NP7rVtrzyNC0U66LK-Bl4/getMe", MeResponse.class);
+    }
+
+    public static SentMessageResponse SendMessage(String text, long chat_id) {
+        return JSONLibrary.FromJSON("https://api.telegram.org/bot5176466546:AAFohyNASLS-j3NP7rVtrzyNC0U66LK-Bl4/sendMessage?text=" + text + "&chat_id=" + chat_id, SentMessageResponse.class);
+    }
 }

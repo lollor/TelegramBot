@@ -9,6 +9,13 @@ package botpubblicita;
  *
  * @author Lorenzo
  */
+abstract class Attachment {
+
+    public String file_id, file_unique_id;
+    public long file_size;
+    public Class type;
+}
+
 class Update {
 
     public long update_id;
@@ -25,6 +32,18 @@ class Message {
     public Entity[] entities;
     public Photo[] photo;
     public Document document;
+
+    public Attachment GetAttachment() {
+        if (photo != null) {
+            photo[photo.length-1].type = Photo.class;
+            return photo[photo.length-1];
+        } else if (document != null) {
+            document.type = Document.class;
+            return document;
+        } else {
+            return null;
+        }
+    }
 }
 
 class User {
@@ -46,21 +65,18 @@ class Entity {
     public String type;
 }
 
-class Photo {
+class Photo extends Attachment {
 
-    public String file_id, file_unique_id;
-    public long file_size, width, height;
+    public long width, height;
 }
 
-class Document {
+class Document extends Attachment {
 
-    public String file_name, mime_type, file_id, file_unique_id;
-    public long file_size;
+    public String file_name, mime_type;
     public Photo thumb;
 }
 
-class File {
+class File extends Attachment {
 
-    public String file_id, file_unique_id, file_path;
-    public long file_size;
+    public String file_path;
 }

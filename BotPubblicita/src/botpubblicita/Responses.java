@@ -17,7 +17,11 @@ class UpdatesResponse {
     public Update[] result;
 
     public Update GetLastResult() {
-        return result[result.length - 1];
+        try {
+            return result[result.length - 1];
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public int GetLength() {
