@@ -5,7 +5,7 @@
  */
 package botpubblicita;
 
-import jsonlibrary.JSONLibrary;
+import telegramapi.JSONLibrary;
 import com.google.gson.*;
 import java.awt.Image;
 import java.awt.image.AbstractMultiResolutionImage;
@@ -26,57 +26,99 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Locale;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.imageio.ImageIO;
+import telegramapi.*;
+import telegramapi.location.Location;
+import telegramapi.mainclasses.*;
+import telegramapi.responses.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.util.Scanner;
 
 /**
  *
  * @author Lorenzo
  */
-public class BotPubblicita {
+public class BotPubblicita implements Listener {
 
     /**
      * @param args the command line arguments
      */
+    public BotPubblicita() {
+        receiver = new UpdatesReceiver();
+        receiver.addListener(this);
+        receiver.start();
+    }
+
+    UpdatesResponse updates = Functions.GetUpdatesResponse();
+    //static MessaggiRisposti messaggiRisposti = MessaggiRisposti.GetInstance();
+    UpdatesReceiver receiver;
+
     public static void main(String[] args) throws MalformedURLException, IOException {
-        // TODO code application logic here
-        UpdatesResponse updates = GetUpdatesResponse();
-        MeResponse me = GetMeResponse();
+        java.awt.EventQueue.invokeLater(() -> {
+            new BotPubblicita();
+        });
+    }
 
-        System.out.println("Ci sono " + updates.result.length + " risultati.");
-        for (var arg : updates.result) {
-            Attachment attachment = arg.message.GetAttachment();
-            if (attachment == null || attachment.type == null) {
-                try {
-                    System.out.println("'" + arg.message.text + "' da " + arg.message.from.username);
-                } catch (NullPointerException e) {
-                    System.out.println(e.getMessage());
-                }
-            } else if (attachment.type == Photo.class) {
-                Photo photo = (Photo) attachment;
-                System.out.println("C'è una foto in allegato. File_id = " + photo.file_id);
-            } else if (attachment.type == Document.class) {
-                Document document = (Document) attachment;
-                System.out.println("C'è un documento in allegato. File_id = " + document.file_id);
+    private void ScriviSuFile(Message messaggio, Location location) throws FileNotFoundException {
+        File file = new File("cities.csv");
+        try {
+            file.createNewFile();
+        } catch (IOException ex) {
+            System.out.println("Impossibile creare file cities.csv. " + ex.getMessage());
+        }
+        Scanner scanner = new Scanner(file);
+        StringBuffer stringBuffer = new StringBuffer();
+        String rigaDaModificare = null;
+        while (scanner.hasNextLine()) {
+            String riga = scanner.nextLine();
+            if (riga.contains(String.valueOf(messaggio.chat.id))) {
+                rigaDaModificare = riga;
             }
+            stringBuffer.append(riga + System.lineSeparator());
         }
-        Update lastUpdate = updates.GetLastResult();
-        if (lastUpdate == null) {
-            System.out.println("Non esiste un messaggio. Non invio niente.");
-            return;
+        String contents = stringBuffer.toString();
+        scanner.close();
+        if (rigaDaModificare != null) {
+            contents = contents.replaceAll(rigaDaModificare, messaggio.chat.id + ";" + messaggio.from.username + ";" + location.lat + ";" + location.lon);
+        } else {
+            contents += messaggio.chat.id + ";" + messaggio.from.username + ";" + location.lat + ";" + location.lon + System.lineSeparator();
         }
-        //SentMessageResponse sentMessage = SendMessage(Calendar.getInstance().getTime().toString(), lastUpdate.message.chat.id);
-        //System.out.println("Ho scritto a " + sentMessage.result.chat.username + " questo messaggio: " + sentMessage.result.text);
+        try {
+            contents = contents.trim();
+            FileWriter writer = new FileWriter(file);
+            writer.write(contents);
+            writer.close();
+        } catch (IOException ex) {
+            System.out.println(ex.getMessage());
+        }
     }
 
-    public static UpdatesResponse GetUpdatesResponse() {
-        return JSONLibrary.FromJSON("https://api.telegram.org/bot5176466546:AAFohyNASLS-j3NP7rVtrzyNC0U66LK-Bl4/getUpdates", UpdatesResponse.class);
-    }
-
-    public static MeResponse GetMeResponse() {
-        return JSONLibrary.FromJSON("https://api.telegram.org/bot5176466546:AAFohyNASLS-j3NP7rVtrzyNC0U66LK-Bl4/getMe", MeResponse.class);
-    }
-
-    public static SentMessageResponse SendMessage(String text, long chat_id) {
-        return JSONLibrary.FromJSON("https://api.telegram.org/bot5176466546:AAFohyNASLS-j3NP7rVtrzyNC0U66LK-Bl4/sendMessage?text=" + text + "&chat_id=" + chat_id, SentMessageResponse.class);
+    @Override
+    public void actionPerformed(Message message) {
+        System.out.println("Message `"+message.text+"` from @"+message.from.username);
+        if (message.text.contains("/citta ")) {
+            Location location = Location.GetLocation(message.text.substring(7));
+            if (location == null){
+                Functions.SendMessage("Non ho trovato nessun risultato per la città *" + message.text.substring(7)+"*", message.chat.id);
+                return;
+            }
+            Functions.SendMessage("La città che hai scelto è: *" + location.display_name+"*", message.chat.id);
+            Functions.SendLocation(location, message.chat.id);
+            try {
+                ScriviSuFile(message, location);
+            } catch (FileNotFoundException ex) {
+                System.out.println(ex.getMessage());
+            }
+        } else if (message.text.equals("/start")) {
+            Functions.SendMessage("Ciao! Per selezionare la città scrivi /citta <nome_citta>", message.chat.id);
+        } else if (message.text.equals("/citta")){
+            Functions.SendMessage("Per selezionare una citta scrivi */citta <nome_citta>*", message.chat.id);
+        } else {
+            Functions.SendMessage("Non riesco a rispondere a questo messaggio.", message.chat.id);
+        }
     }
 }
