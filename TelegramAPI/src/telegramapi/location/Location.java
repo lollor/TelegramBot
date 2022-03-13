@@ -46,8 +46,21 @@ public class Location {
             location.lon = Double.parseDouble(place.getAttributes().getNamedItem("lon").getNodeValue());
             return location;
         } catch (Exception e) {
-                System.out.println(e.getMessage());
-                return null;
+            System.out.println(e.getMessage());
+            return null;
+        }
+    }
+
+    public static Location GetLocation(double lat, double lon) {
+        try {
+            Location location = new Location();
+            location.display_name = "";
+            location.lat = lat;
+            location.lon = lon;
+            return location;
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            return null;
         }
     }
 
@@ -65,5 +78,23 @@ public class Location {
             System.out.println(ex.getMessage());
         }
         return null;
+    }
+
+    public static double GetDistanceKilometers(Location location1, Location location2) {
+        double R = 6371.0088;
+        Double lat1 = location1.lat;
+        Double lon1 = location1.lon;
+        Double lat2 = location2.lat;
+        Double lon2 = location1.lon;
+        Double latDistance = Math.toRadians((lat2 - lat1));
+        Double lonDistance = Math.toRadians((lon2 - lon1));
+        lat1 = Math.toRadians(lat1);
+        lat2 = Math.toRadians(lat2);
+        double a = haversin(latDistance) + Math.cos(lat1) * Math.cos(lat2) * haversin(lonDistance);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+    }
+    private static double haversin(double val){
+        return Math.pow(Math.sin(val / 2), 2);
     }
 }

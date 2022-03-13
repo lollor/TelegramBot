@@ -5,30 +5,8 @@
  */
 package botpubblicita;
 
-import telegramapi.JSONLibrary;
-import com.google.gson.*;
-import java.awt.Image;
-import java.awt.image.AbstractMultiResolutionImage;
-import java.awt.image.BufferedImage;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.io.Reader;
-import java.io.Writer;
 import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Locale;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.imageio.ImageIO;
 import telegramapi.*;
 import telegramapi.location.Location;
 import telegramapi.mainclasses.*;
@@ -64,11 +42,11 @@ public class BotPubblicita implements Listener {
     }
 
     private void ScriviSuFile(Message messaggio, Location location) throws FileNotFoundException {
-        File file = new File("cities.csv");
+        File file = new File("database.csv");
         try {
             file.createNewFile();
         } catch (IOException ex) {
-            System.out.println("Impossibile creare file cities.csv. " + ex.getMessage());
+            System.out.println("Impossibile creare file database.csv. " + ex.getMessage());
         }
         Scanner scanner = new Scanner(file);
         StringBuffer stringBuffer = new StringBuffer();
@@ -114,7 +92,7 @@ public class BotPubblicita implements Listener {
                 System.out.println(ex.getMessage());
             }
         } else if (message.text.equals("/start")) {
-            Functions.SendMessage("Ciao! Per selezionare la città scrivi /citta <nome_citta>", message.chat.id);
+            Functions.SendMessage("Ciao! Per selezionare la città scrivi */citta <nome_citta>*", message.chat.id);
         } else if (message.text.equals("/citta")){
             Functions.SendMessage("Per selezionare una citta scrivi */citta <nome_citta>*", message.chat.id);
         } else {

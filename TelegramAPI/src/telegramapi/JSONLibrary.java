@@ -37,7 +37,7 @@ public class JSONLibrary {
             System.out.println(ex.getMessage());
             return null;
         } catch (IOException ex) {
-            Logger.getLogger(ex.getMessage());
+            System.out.println(ex.getMessage());
             return null;
         }
     }

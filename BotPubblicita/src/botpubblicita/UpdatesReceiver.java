@@ -41,7 +41,7 @@ public class UpdatesReceiver extends Thread {
                 }
             }).start();
             try {
-                Thread.sleep(1000);
+                Thread.sleep(500);
             } catch (InterruptedException ex) {
                 Logger.getLogger(BotPubblicita.class.getName()).log(Level.SEVERE, null, ex);
             }
