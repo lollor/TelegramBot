@@ -34,16 +34,20 @@ public class UpdatesReceiver extends Thread {
         while (true) {
             newUpdates = Functions.GetUpdatesResponse();
             new Thread(() -> {
-                if (newUpdates.GetLength() != oldUpdates.GetLength()){
+                if (newUpdates.GetLength() != oldUpdates.GetLength()) {
                     for (Listener listener : listeners) {
-                        listener.actionPerformed(newUpdates.GetLastResult().message);
+                        try {
+                            listener.actionPerformed(newUpdates.GetLastResult().message);
+                        } catch (Exception e) {
+                            System.out.println(e.getMessage());
+                        }
                     }
                 }
             }).start();
             try {
                 Thread.sleep(500);
             } catch (InterruptedException ex) {
-                Logger.getLogger(BotPubblicita.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(Bot.class.getName()).log(Level.SEVERE, null, ex);
             }
             oldUpdates = newUpdates;
         }

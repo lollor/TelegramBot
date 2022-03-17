@@ -20,24 +20,24 @@ import java.util.Scanner;
  *
  * @author Lorenzo
  */
-public class BotPubblicita implements Listener {
+public class Bot implements Listener {
 
     /**
      * @param args the command line arguments
      */
-    public BotPubblicita() {
+    public Bot() {
         receiver = new UpdatesReceiver();
         receiver.addListener(this);
         receiver.start();
     }
 
-    UpdatesResponse updates = Functions.GetUpdatesResponse();
+    //UpdatesResponse updates = Functions.GetUpdatesResponse(); 
     //static MessaggiRisposti messaggiRisposti = MessaggiRisposti.GetInstance();
     UpdatesReceiver receiver;
 
     public static void main(String[] args) throws MalformedURLException, IOException {
         java.awt.EventQueue.invokeLater(() -> {
-            new BotPubblicita();
+            new Bot();
         });
     }
 
@@ -77,26 +77,34 @@ public class BotPubblicita implements Listener {
 
     @Override
     public void actionPerformed(Message message) {
-        System.out.println("Message `"+message.text+"` from @"+message.from.username);
-        if (message.text.contains("/citta ")) {
-            Location location = Location.GetLocation(message.text.substring(7));
-            if (location == null){
-                Functions.SendMessage("Non ho trovato nessun risultato per la città *" + message.text.substring(7)+"*", message.chat.id);
+        System.out.println("Message `" + message.text + "` from @" + message.from.username);
+        String argument = message.text.substring(message.text.indexOf(" ")+1), comando = message.text.split(" ")[0];
+        //System.out.println("comando=["+comando+"], argument=["+argument+"]");
+        switch (comando) {
+            case "/citta":
+                if (argument == null || argument.equals("")){
+                    Functions.SendMessage("Per selezionare una citta scrivi */citta <nome_citta>*", message.chat.id);
+                    return;
+                }
+                Location location = Location.GetLocation(message.text.substring(7));
+                if (location == null) {
+                    Functions.SendMessage("Non ho trovato nessun risultato per la città *" + message.text.substring(7) + "*", message.chat.id);
+                    return;
+                }
+                Functions.SendMessage("La città che hai scelto è: *" + location.display_name + "*", message.chat.id);
+                Functions.SendLocation(location, message.chat.id);
+                try {
+                    ScriviSuFile(message, location);
+                } catch (FileNotFoundException ex) {
+                    System.out.println(ex.getMessage());
+                }
                 return;
-            }
-            Functions.SendMessage("La città che hai scelto è: *" + location.display_name+"*", message.chat.id);
-            Functions.SendLocation(location, message.chat.id);
-            try {
-                ScriviSuFile(message, location);
-            } catch (FileNotFoundException ex) {
-                System.out.println(ex.getMessage());
-            }
-        } else if (message.text.equals("/start")) {
-            Functions.SendMessage("Ciao! Per selezionare la città scrivi */citta <nome_citta>*", message.chat.id);
-        } else if (message.text.equals("/citta")){
-            Functions.SendMessage("Per selezionare una citta scrivi */citta <nome_citta>*", message.chat.id);
-        } else {
-            Functions.SendMessage("Non riesco a rispondere a questo messaggio.", message.chat.id);
+            case "/start":
+                Functions.SendMessage("Ciao! Per selezionare la città scrivi */citta <nome_citta>*", message.chat.id);
+                return;
+            default:
+                Functions.SendMessage("Non riesco a rispondere a questo messaggio.", message.chat.id);
+                return;
         }
     }
 }

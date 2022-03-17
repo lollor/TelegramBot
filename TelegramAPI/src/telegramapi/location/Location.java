@@ -85,7 +85,7 @@ public class Location {
         Double lat1 = location1.lat;
         Double lon1 = location1.lon;
         Double lat2 = location2.lat;
-        Double lon2 = location1.lon;
+        Double lon2 = location2.lon;
         Double latDistance = Math.toRadians((lat2 - lat1));
         Double lonDistance = Math.toRadians((lon2 - lon1));
         lat1 = Math.toRadians(lat1);
